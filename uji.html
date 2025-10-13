@@ -148,8 +148,8 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                        <i class="fas fa-circle text-green-500 mr-1"></i>
-                        Real-time Data
+                        <i class="fas fa-clock text-green-500 mr-1"></i>
+                        <span id="currentDateTime">Loading...</span>
                     </div>
                     <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                         <i class="fas fa-sync-alt mr-2"></i>Refresh
@@ -737,11 +737,53 @@
             renderSchools();
         });
 
+        // Function to update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Set timezone to Indonesia Central Time (WITA - UTC+8)
+            const dayOptions = {
+                timeZone: 'Asia/Makassar',
+                weekday: 'long'
+            };
+            
+            const dateOptions = {
+                timeZone: 'Asia/Makassar',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            
+            const timeOptions = {
+                timeZone: 'Asia/Makassar',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            
+            const dayFormatter = new Intl.DateTimeFormat('id-ID', dayOptions);
+            const dateFormatter = new Intl.DateTimeFormat('id-ID', dateOptions);
+            const timeFormatter = new Intl.DateTimeFormat('id-ID', timeOptions);
+            
+            const day = dayFormatter.format(now);
+            const date = dateFormatter.format(now);
+            const time = timeFormatter.format(now);
+            
+            const formattedDateTime = `${day}, ${date}, ${time} WITA`;
+            
+            document.getElementById('currentDateTime').textContent = formattedDateTime;
+        }
+
         // Initialize
         fetchSchoolData();
+        updateDateTime();
         
-        // Auto-refresh every 5 minutes
+        // Update time every second
+        setInterval(updateDateTime, 1000);
+        
+        // Auto-refresh data every 5 minutes
         setInterval(fetchSchoolData, 300000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98de9947f18bce4b',t:'MTc2MDM1NjAxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98deaedf123e3e56',t:'MTc2MDM1Njg5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
