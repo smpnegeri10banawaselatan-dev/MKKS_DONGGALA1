@@ -50,6 +50,85 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            height: 192px;
+            overflow: hidden;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .slide.active {
+            opacity: 1;
+        }
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slideshow-nav {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+        .slideshow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .slideshow-dot.active {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .slideshow-arrows {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+        .slideshow-container:hover .slideshow-arrows {
+            opacity: 1;
+        }
+        .slideshow-arrows.prev {
+            left: 10px;
+        }
+        .slideshow-arrows.next {
+            right: 10px;
+        }
+        .photo-count {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
@@ -217,7 +296,9 @@
                     namaKepsek: row.c[1]?.v || '',
                     nip: row.c[2]?.v || '',
                     linkWeb: row.c[3]?.v || '',
-                    photo: row.c[4]?.v || ''
+                    photo1: row.c[4]?.v || '',
+                    photo2: row.c[5]?.v || '',
+                    photo3: row.c[6]?.v || ''
                 })).filter(school => school.namaSekolah);
 
                 filteredSchools = [...allSchools];
@@ -249,9 +330,14 @@
         function updateStats() {
             const total = allSchools.length;
             const withWebsite = allSchools.filter(s => s.linkWeb && s.linkWeb.trim()).length;
-            const withPhoto = allSchools.filter(s => s.photo && s.photo.trim()).length;
+            const withPhoto = allSchools.filter(s => 
+                (s.photo1 && s.photo1.trim()) || 
+                (s.photo2 && s.photo2.trim()) || 
+                (s.photo3 && s.photo3.trim())
+            ).length;
             const complete = allSchools.filter(s => 
-                s.namaSekolah && s.namaKepsek && s.nip && s.linkWeb && s.photo
+                s.namaSekolah && s.namaKepsek && s.nip && s.linkWeb && 
+                ((s.photo1 && s.photo1.trim()) || (s.photo2 && s.photo2.trim()) || (s.photo3 && s.photo3.trim()))
             ).length;
 
             document.getElementById('totalSekolah').textContent = total;
@@ -303,16 +389,50 @@
             card.className = 'bg-white rounded-xl shadow-lg overflow-hidden card-hover relative';
             
             const hasWebsite = school.linkWeb && school.linkWeb.trim();
-            const hasPhoto = school.photo && school.photo.trim();
+            const photos = [school.photo1, school.photo2, school.photo3].filter(p => p && p.trim());
+            const hasPhotos = photos.length > 0;
+            
+            const cardId = `card-${Math.random().toString(36).substr(2, 9)}`;
+            
+            let photoSection = '';
+            if (hasPhotos) {
+                photoSection = `
+                    <div class="slideshow-container" id="${cardId}">
+                        ${photos.length > 1 ? `<div class="photo-count"><i class="fas fa-images mr-1"></i>${photos.length}</div>` : ''}
+                        ${photos.map((photo, index) => `
+                            <div class="slide ${index === 0 ? 'active' : ''}">
+                                <img src="${photo}" alt="Foto ${school.namaSekolah} ${index + 1}" 
+                                     onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder h-48\\'>${school.namaSekolah.charAt(0)}</div>'">
+                            </div>
+                        `).join('')}
+                        ${photos.length > 1 ? `
+                            <button class="slideshow-arrows prev" onclick="changeSlide('${cardId}', -1)">
+                                <i class="fas fa-chevron-left text-xs"></i>
+                            </button>
+                            <button class="slideshow-arrows next" onclick="changeSlide('${cardId}', 1)">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </button>
+                            <div class="slideshow-nav">
+                                ${photos.map((_, index) => `
+                                    <div class="slideshow-dot ${index === 0 ? 'active' : ''}" 
+                                         onclick="goToSlide('${cardId}', ${index})"></div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${hasWebsite ? '<div class="status-badge"><i class="fas fa-globe mr-1"></i>Online</div>' : ''}
+                    </div>
+                `;
+            } else {
+                photoSection = `
+                    <div class="relative">
+                        <div class="photo-placeholder h-48">${school.namaSekolah.charAt(0)}</div>
+                        ${hasWebsite ? '<div class="status-badge"><i class="fas fa-globe mr-1"></i>Online</div>' : ''}
+                    </div>
+                `;
+            }
             
             card.innerHTML = `
-                <div class="relative">
-                    ${hasPhoto ? 
-                        `<img src="${school.photo}" alt="Foto ${school.namaSekolah}" class="w-full h-48 object-cover" onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder h-48\\'>${school.namaSekolah.charAt(0)}</div>'">` :
-                        `<div class="photo-placeholder h-48">${school.namaSekolah.charAt(0)}</div>`
-                    }
-                    ${hasWebsite ? '<div class="status-badge"><i class="fas fa-globe mr-1"></i>Online</div>' : ''}
-                </div>
+                ${photoSection}
                 <div class="p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${school.namaSekolah}</h3>
                     <div class="space-y-2 mb-4">
@@ -337,10 +457,11 @@
                                 Tidak Ada Situs
                             </div>`
                         }
-                        ${hasPhoto ? 
-                            `<button onclick="viewPhoto('${school.photo}', '${school.namaSekolah}')" 
+                        ${hasPhotos ? 
+                            `<button onclick="viewPhotoGallery(${JSON.stringify(photos).replace(/"/g, '&quot;')}, '${school.namaSekolah}')" 
                                class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium">
                                 <i class="fas fa-eye"></i>
+                                ${photos.length > 1 ? `<span class="ml-1">${photos.length}</span>` : ''}
                             </button>` :
                             `<button class="bg-gray-300 text-gray-500 py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed">
                                 <i class="fas fa-image"></i>
@@ -349,6 +470,13 @@
                     </div>
                 </div>
             `;
+            
+            // Auto-advance slideshow if multiple photos
+            if (photos.length > 1) {
+                setTimeout(() => {
+                    startAutoSlideshow(cardId, photos.length);
+                }, 100);
+            }
             
             return card;
         }
@@ -408,29 +536,139 @@
             }
         }
 
-        function viewPhoto(photoUrl, schoolName) {
-            if (!photoUrl) return;
+        // Slideshow functionality
+        const slideshowIntervals = {};
+
+        function changeSlide(cardId, direction) {
+            const container = document.getElementById(cardId);
+            if (!container) return;
+            
+            const slides = container.querySelectorAll('.slide');
+            const dots = container.querySelectorAll('.slideshow-dot');
+            const currentSlide = container.querySelector('.slide.active');
+            const currentIndex = Array.from(slides).indexOf(currentSlide);
+            
+            let newIndex = currentIndex + direction;
+            if (newIndex >= slides.length) newIndex = 0;
+            if (newIndex < 0) newIndex = slides.length - 1;
+            
+            // Update slides
+            slides[currentIndex].classList.remove('active');
+            slides[newIndex].classList.add('active');
+            
+            // Update dots
+            if (dots.length > 0) {
+                dots[currentIndex].classList.remove('active');
+                dots[newIndex].classList.add('active');
+            }
+            
+            // Reset auto-advance timer
+            if (slideshowIntervals[cardId]) {
+                clearInterval(slideshowIntervals[cardId]);
+                startAutoSlideshow(cardId, slides.length);
+            }
+        }
+
+        function goToSlide(cardId, index) {
+            const container = document.getElementById(cardId);
+            if (!container) return;
+            
+            const slides = container.querySelectorAll('.slide');
+            const dots = container.querySelectorAll('.slideshow-dot');
+            const currentSlide = container.querySelector('.slide.active');
+            const currentIndex = Array.from(slides).indexOf(currentSlide);
+            
+            if (currentIndex === index) return;
+            
+            // Update slides
+            slides[currentIndex].classList.remove('active');
+            slides[index].classList.add('active');
+            
+            // Update dots
+            if (dots.length > 0) {
+                dots[currentIndex].classList.remove('active');
+                dots[index].classList.add('active');
+            }
+            
+            // Reset auto-advance timer
+            if (slideshowIntervals[cardId]) {
+                clearInterval(slideshowIntervals[cardId]);
+                startAutoSlideshow(cardId, slides.length);
+            }
+        }
+
+        function startAutoSlideshow(cardId, totalSlides) {
+            if (totalSlides <= 1) return;
+            
+            slideshowIntervals[cardId] = setInterval(() => {
+                changeSlide(cardId, 1);
+            }, 4000); // Change slide every 4 seconds
+        }
+
+        function viewPhotoGallery(photos, schoolName) {
+            if (!photos || photos.length === 0) return;
             
             const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
-            modal.onclick = () => modal.remove();
+            modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
+            modal.onclick = () => {
+                modal.remove();
+                if (modalInterval) clearInterval(modalInterval);
+            };
+            
+            const modalId = `modal-${Math.random().toString(36).substr(2, 9)}`;
+            let modalInterval;
             
             modal.innerHTML = `
-                <div class="bg-white rounded-xl max-w-4xl max-h-full overflow-auto" onclick="event.stopPropagation()">
+                <div class="bg-white rounded-xl max-w-4xl max-h-full overflow-hidden" onclick="event.stopPropagation()">
                     <div class="p-4 border-b flex justify-between items-center">
-                        <h3 class="text-lg font-semibold">${schoolName}</h3>
-                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                        <h3 class="text-lg font-semibold">${schoolName} - Galeri Foto</h3>
+                        <button onclick="this.closest('.fixed').remove(); if(modalInterval) clearInterval(modalInterval);" class="text-gray-500 hover:text-gray-700">
                             <i class="fas fa-times text-xl"></i>
                         </button>
                     </div>
-                    <div class="p-4">
-                        <img src="${photoUrl}" alt="${schoolName}" class="w-full h-auto rounded-lg" 
-                             onerror="this.parentElement.innerHTML='<div class=\\'text-center text-gray-500 py-8\\'>Gagal memuat foto</div>'">
+                    <div class="relative">
+                        <div class="slideshow-container" id="${modalId}" style="height: 400px;">
+                            ${photos.map((photo, index) => `
+                                <div class="slide ${index === 0 ? 'active' : ''}">
+                                    <img src="${photo}" alt="${schoolName} ${index + 1}" class="w-full h-full object-contain bg-gray-100" 
+                                         onerror="this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-gray-500\\'>Gagal memuat foto</div>'">
+                                </div>
+                            `).join('')}
+                            ${photos.length > 1 ? `
+                                <button class="slideshow-arrows prev" onclick="changeSlide('${modalId}', -1)" style="opacity: 1;">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="slideshow-arrows next" onclick="changeSlide('${modalId}', 1)" style="opacity: 1;">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <div class="slideshow-nav">
+                                    ${photos.map((_, index) => `
+                                        <div class="slideshow-dot ${index === 0 ? 'active' : ''}" 
+                                             onclick="goToSlide('${modalId}', ${index})"></div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${photos.length > 1 ? `
+                            <div class="p-4 bg-gray-50 text-center text-sm text-gray-600">
+                                <i class="fas fa-images mr-1"></i>
+                                ${photos.length} foto tersedia - Klik panah atau titik untuk navigasi
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
+            
+            // Start auto-advance for modal slideshow
+            if (photos.length > 1) {
+                setTimeout(() => {
+                    modalInterval = setInterval(() => {
+                        changeSlide(modalId, 1);
+                    }, 5000);
+                }, 100);
+            }
         }
 
         function refreshData() {
@@ -452,5 +690,5 @@
         // Auto-refresh every 5 minutes
         setInterval(fetchSchoolData, 300000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ddd15bc09fff83',t:'MTc2MDM0NzgyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ddfdf972589faa',t:'MTc2MDM0OTY0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
