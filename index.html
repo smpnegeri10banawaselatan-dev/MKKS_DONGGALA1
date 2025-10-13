@@ -619,43 +619,43 @@
             let modalInterval;
             
             modal.innerHTML = `
-                <div class="bg-white rounded-xl max-w-4xl max-h-full overflow-hidden" onclick="event.stopPropagation()">
-                    <div class="p-4 border-b flex justify-between items-center">
-                        <h3 class="text-lg font-semibold">${schoolName} - Galeri Foto</h3>
-                        <button onclick="this.closest('.fixed').remove(); if(modalInterval) clearInterval(modalInterval);" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times text-xl"></i>
+                <div class="bg-white rounded-xl w-full h-full max-w-7xl max-h-full overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                    <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+                        <h3 class="text-xl font-semibold">${schoolName} - Galeri Foto</h3>
+                        <button onclick="this.closest('.fixed').remove(); if(modalInterval) clearInterval(modalInterval);" class="text-gray-500 hover:text-gray-700 p-2">
+                            <i class="fas fa-times text-2xl"></i>
                         </button>
                     </div>
-                    <div class="relative">
-                        <div class="slideshow-container" id="${modalId}" style="height: 400px;">
+                    <div class="relative flex-1 min-h-0">
+                        <div class="slideshow-container" id="${modalId}" style="height: 100%;">
                             ${photos.map((photo, index) => `
                                 <div class="slide ${index === 0 ? 'active' : ''}">
                                     <img src="${photo}" alt="${schoolName} ${index + 1}" class="w-full h-full object-contain bg-gray-100" 
-                                         onerror="this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-gray-500\\'>Gagal memuat foto</div>'">
+                                         onerror="this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full text-gray-500 text-xl\\'>Gagal memuat foto</div>'">
                                 </div>
                             `).join('')}
                             ${photos.length > 1 ? `
-                                <button class="slideshow-arrows prev" onclick="changeSlide('${modalId}', -1)" style="opacity: 1;">
-                                    <i class="fas fa-chevron-left"></i>
+                                <button class="slideshow-arrows prev" onclick="changeSlide('${modalId}', -1)" style="opacity: 1; width: 50px; height: 50px;">
+                                    <i class="fas fa-chevron-left text-lg"></i>
                                 </button>
-                                <button class="slideshow-arrows next" onclick="changeSlide('${modalId}', 1)" style="opacity: 1;">
-                                    <i class="fas fa-chevron-right"></i>
+                                <button class="slideshow-arrows next" onclick="changeSlide('${modalId}', 1)" style="opacity: 1; width: 50px; height: 50px;">
+                                    <i class="fas fa-chevron-right text-lg"></i>
                                 </button>
                                 <div class="slideshow-nav">
                                     ${photos.map((_, index) => `
                                         <div class="slideshow-dot ${index === 0 ? 'active' : ''}" 
-                                             onclick="goToSlide('${modalId}', ${index})"></div>
+                                             onclick="goToSlide('${modalId}', ${index})" style="width: 12px; height: 12px;"></div>
                                     `).join('')}
                                 </div>
                             ` : ''}
                         </div>
-                        ${photos.length > 1 ? `
-                            <div class="p-4 bg-gray-50 text-center text-sm text-gray-600">
-                                <i class="fas fa-images mr-1"></i>
-                                ${photos.length} foto tersedia - Klik panah atau titik untuk navigasi
-                            </div>
-                        ` : ''}
                     </div>
+                    ${photos.length > 1 ? `
+                        <div class="p-4 bg-gray-50 text-center text-base text-gray-600 flex-shrink-0">
+                            <i class="fas fa-images mr-2"></i>
+                            ${photos.length} foto tersedia - Gunakan panah atau titik untuk navigasi
+                        </div>
+                    ` : ''}
                 </div>
             `;
             
@@ -690,5 +690,5 @@
         // Auto-refresh every 5 minutes
         setInterval(fetchSchoolData, 300000);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ddfdf972589faa',t:'MTc2MDM0OTY0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98de19b49178f8e6',t:'MTc2MDM1MDc4NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
