@@ -8,6 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #e0f2fe, #ffffff);
@@ -58,6 +59,12 @@
       </div>
     </div>
 
+    <!-- Grafik -->
+    <div class="bg-white rounded-xl shadow p-4 mb-6">
+      <h3 class="text-lg font-semibold text-gray-700 mb-2">📈 Grafik Analisis Sekolah</h3>
+      <canvas id="schoolChart" height="120"></canvas>
+    </div>
+
     <!-- Filter dan pencarian -->
     <div class="flex flex-col md:flex-row justify-between mb-4 gap-3">
       <input id="searchInput" type="text" placeholder="🔍 Cari nama sekolah..." class="form-control w-full md:w-1/3">
@@ -84,52 +91,65 @@
     </div>
   </div>
 
-  <!-- Modal Galeri Foto -->
-  <div class="modal fade" id="photoGalleryModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-blue-700 text-white">
-          <h5 class="modal-title font-semibold">Galeri Sekolah</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="galleryContent"></div>
-      </div>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     let allSchools = [];
     let currentPage = 1;
     let itemsPerPage = 6;
+    let chart;
 
     async function fetchSchoolData() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRGW31bdL9cIbztdY2bg_2C6YvliH8Fo9tF_0KvHljvIYwVwCqH3uW_Mbz7K1-j8NUN2s4Ygr8V6E_q/pub?output=csv";
       const response = await fetch(url);
       const data = await response.text();
       const rows = data.split("\n").map(r => r.split(","));
-      const headers = rows[0];
-      allSchools = rows.slice(1).map(r => {
-        return {
-          nama: r[0],
-          kepala: r[1],
-          nip: r[2],
-          website: r[3],
-          foto1: r[4],
-          foto2: r[5],
-          foto3: r[6]
-        };
-      });
+      allSchools = rows.slice(1).map(r => ({
+        nama: r[0],
+        kepala: r[1],
+        nip: r[2],
+        website: r[3],
+        foto1: r[4],
+        foto2: r[5],
+        foto3: r[6]
+      }));
       updateStats();
       renderSchools();
+      renderChart();
     }
 
     function updateStats() {
-      document.getElementById("totalSekolah").textContent = allSchools.length;
-      document.getElementById("totalWebsite").textContent = allSchools.filter(s => s.website).length;
-      document.getElementById("totalFoto").textContent = allSchools.filter(s => s.foto1).length;
-      document.getElementById("dataLengkap").textContent = allSchools.filter(s => s.website && s.foto1).length;
+      const total = allSchools.length;
+      const punyaWebsite = allSchools.filter(s => s.website).length;
+      const punyaFoto = allSchools.filter(s => s.foto1).length;
+      const lengkap = allSchools.filter(s => s.website && s.foto1).length;
+
+      document.getElementById("totalSekolah").textContent = total;
+      document.getElementById("totalWebsite").textContent = punyaWebsite;
+      document.getElementById("totalFoto").textContent = punyaFoto;
+      document.getElementById("dataLengkap").textContent = lengkap;
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById("schoolChart");
+      const total = allSchools.length;
+      const website = allSchools.filter(s => s.website).length;
+      const foto = allSchools.filter(s => s.foto1).length;
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Total Sekolah", "Punya Website", "Punya Foto"],
+          datasets: [{
+            label: "Jumlah",
+            data: [total, website, foto],
+            backgroundColor: ["#3b82f6", "#22c55e", "#facc15"]
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
     }
 
     function renderSchools() {
@@ -148,20 +168,18 @@
       });
 
       const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const paginated = filtered.slice(start, end);
+      const paginated = filtered.slice(start, start + itemsPerPage);
 
       paginated.forEach(s => {
-        const photos = [s.foto1, s.foto2, s.foto3].filter(p => p);
+        const photos = [s.foto1, s.foto2, s.foto3].filter(Boolean);
         const carouselId = "carousel" + Math.random().toString(36).substring(2, 7);
-
         const html = `
-          <div class="card card-custom border-0 shadow rounded-xl">
+          <div class="card card-custom border-0 shadow rounded-xl overflow-hidden">
             <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
               <div class="carousel-inner">
                 ${photos.map((p, i) => `
                   <div class="carousel-item ${i === 0 ? 'active' : ''}">
-                    <img src="${p}" class="d-block w-100 rounded-top-lg" alt="Foto ${s.nama}">
+                    <img src="${p}" class="d-block w-100" alt="Foto ${s.nama}">
                   </div>`).join('')}
               </div>
               ${photos.length > 1 ? `
@@ -199,10 +217,6 @@
       }
     }
 
-    function refreshData() {
-      fetchSchoolData();
-    }
-
     function exportToExcel() {
       const ws = XLSX.utils.json_to_sheet(allSchools);
       const wb = XLSX.utils.book_new();
@@ -218,6 +232,10 @@
         doc.text(`${i + 1}. ${s.nama} (${s.kepala || '-'})`, 10, 20 + i * 10);
       });
       doc.save("Data_Sekolah.pdf");
+    }
+
+    function refreshData() {
+      fetchSchoolData();
     }
 
     document.getElementById("searchInput").addEventListener("input", renderSchools);
