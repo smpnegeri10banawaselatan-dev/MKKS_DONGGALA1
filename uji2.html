@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard MKKS ROSO NU SINTUVU</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0f2fe, #ffffff);
+      min-height: 100vh;
+    }
+    .card-custom {
+      transition: all 0.3s ease;
+    }
+    .card-custom:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+    .carousel-item img {
+      object-fit: cover;
+      height: 200px;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <div class="container mx-auto py-6 px-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-blue-700">📊 Dashboard MKKS ROSO NU SINTUVU</h1>
+      <div>
+        <button onclick="refreshData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">🔄 Refresh</button>
+        <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 ml-2">📗 Excel</button>
+        <button onclick="exportToPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 ml-2">📄 PDF</button>
+      </div>
+    </div>
+
+    <!-- Statistik -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="p-4 bg-blue-100 rounded-xl text-center shadow">
+        <h2 class="text-2xl font-bold text-blue-700" id="totalSekolah">0</h2>
+        <p class="text-gray-600">Total Sekolah</p>
+      </div>
+      <div class="p-4 bg-green-100 rounded-xl text-center shadow">
+        <h2 class="text-2xl font-bold text-green-700" id="totalWebsite">0</h2>
+        <p class="text-gray-600">Punya Website</p>
+      </div>
+      <div class="p-4 bg-yellow-100 rounded-xl text-center shadow">
+        <h2 class="text-2xl font-bold text-yellow-700" id="totalFoto">0</h2>
+        <p class="text-gray-600">Punya Foto</p>
+      </div>
+      <div class="p-4 bg-purple-100 rounded-xl text-center shadow">
+        <h2 class="text-2xl font-bold text-purple-700" id="dataLengkap">0</h2>
+        <p class="text-gray-600">Data Lengkap</p>
+      </div>
+    </div>
+
+    <!-- Filter dan pencarian -->
+    <div class="flex flex-col md:flex-row justify-between mb-4 gap-3">
+      <input id="searchInput" type="text" placeholder="🔍 Cari nama sekolah..." class="form-control w-full md:w-1/3">
+      <select id="filterWebsite" class="form-select w-full md:w-1/4">
+        <option value="all">Semua</option>
+        <option value="yes">Punya Website</option>
+        <option value="no">Tidak Punya Website</option>
+      </select>
+      <select id="itemsPerPage" class="form-select w-full md:w-1/6">
+        <option value="6">6 / Halaman</option>
+        <option value="12">12 / Halaman</option>
+        <option value="24">24 / Halaman</option>
+      </select>
+    </div>
+
+    <!-- Data sekolah -->
+    <div id="schoolContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+
+    <!-- Pagination -->
+    <div class="flex justify-center mt-6">
+      <button id="prevBtn" class="bg-gray-300 px-4 py-2 rounded-l-lg" onclick="prevPage()">⬅️</button>
+      <span id="pageInfo" class="bg-white px-4 py-2 border">1</span>
+      <button id="nextBtn" class="bg-gray-300 px-4 py-2 rounded-r-lg" onclick="nextPage()">➡️</button>
+    </div>
+  </div>
+
+  <!-- Modal Galeri Foto -->
+  <div class="modal fade" id="photoGalleryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-blue-700 text-white">
+          <h5 class="modal-title font-semibold">Galeri Sekolah</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="galleryContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    let allSchools = [];
+    let currentPage = 1;
+    let itemsPerPage = 6;
+
+    async function fetchSchoolData() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRGW31bdL9cIbztdY2bg_2C6YvliH8Fo9tF_0KvHljvIYwVwCqH3uW_Mbz7K1-j8NUN2s4Ygr8V6E_q/pub?output=csv";
+      const response = await fetch(url);
+      const data = await response.text();
+      const rows = data.split("\n").map(r => r.split(","));
+      const headers = rows[0];
+      allSchools = rows.slice(1).map(r => {
+        return {
+          nama: r[0],
+          kepala: r[1],
+          nip: r[2],
+          website: r[3],
+          foto1: r[4],
+          foto2: r[5],
+          foto3: r[6]
+        };
+      });
+      updateStats();
+      renderSchools();
+    }
+
+    function updateStats() {
+      document.getElementById("totalSekolah").textContent = allSchools.length;
+      document.getElementById("totalWebsite").textContent = allSchools.filter(s => s.website).length;
+      document.getElementById("totalFoto").textContent = allSchools.filter(s => s.foto1).length;
+      document.getElementById("dataLengkap").textContent = allSchools.filter(s => s.website && s.foto1).length;
+    }
+
+    function renderSchools() {
+      const container = document.getElementById("schoolContainer");
+      container.innerHTML = "";
+
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const filter = document.getElementById("filterWebsite").value;
+
+      const filtered = allSchools.filter(s => {
+        const matchSearch = s.nama.toLowerCase().includes(search);
+        const matchFilter = (filter === "all") ||
+                            (filter === "yes" && s.website) ||
+                            (filter === "no" && !s.website);
+        return matchSearch && matchFilter;
+      });
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginated = filtered.slice(start, end);
+
+      paginated.forEach(s => {
+        const photos = [s.foto1, s.foto2, s.foto3].filter(p => p);
+        const carouselId = "carousel" + Math.random().toString(36).substring(2, 7);
+
+        const html = `
+          <div class="card card-custom border-0 shadow rounded-xl">
+            <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-inner">
+                ${photos.map((p, i) => `
+                  <div class="carousel-item ${i === 0 ? 'active' : ''}">
+                    <img src="${p}" class="d-block w-100 rounded-top-lg" alt="Foto ${s.nama}">
+                  </div>`).join('')}
+              </div>
+              ${photos.length > 1 ? `
+              <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+              </button>` : ''}
+            </div>
+            <div class="card-body text-center">
+              <h5 class="font-bold">${s.nama}</h5>
+              <p class="text-gray-500 text-sm">${s.kepala || '-'} (${s.nip || '-'})</p>
+              ${s.website ? `<a href="${s.website}" target="_blank" class="text-blue-600 hover:underline">🌐 Website</a>` : `<span class="text-gray-400">Tidak ada website</span>`}
+            </div>
+          </div>
+        `;
+        container.innerHTML += html;
+      });
+
+      document.getElementById("pageInfo").textContent = `${currentPage} / ${Math.ceil(filtered.length / itemsPerPage)}`;
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderSchools();
+      }
+    }
+
+    function nextPage() {
+      if (currentPage * itemsPerPage < allSchools.length) {
+        currentPage++;
+        renderSchools();
+      }
+    }
+
+    function refreshData() {
+      fetchSchoolData();
+    }
+
+    function exportToExcel() {
+      const ws = XLSX.utils.json_to_sheet(allSchools);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sekolah");
+      XLSX.writeFile(wb, "Data_Sekolah.xlsx");
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Data Sekolah MKKS ROSO NU SINTUVU", 10, 10);
+      allSchools.forEach((s, i) => {
+        doc.text(`${i + 1}. ${s.nama} (${s.kepala || '-'})`, 10, 20 + i * 10);
+      });
+      doc.save("Data_Sekolah.pdf");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderSchools);
+    document.getElementById("filterWebsite").addEventListener("change", renderSchools);
+    document.getElementById("itemsPerPage").addEventListener("change", e => {
+      itemsPerPage = parseInt(e.target.value);
+      renderSchools();
+    });
+
+    window.onload = fetchSchoolData;
+  </script>
+
+</body>
+</html>
