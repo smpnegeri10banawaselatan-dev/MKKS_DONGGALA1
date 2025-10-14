@@ -1,165 +1,278 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard MKKS ROSO NU SINTUVU</title>
+
+  <!-- Tailwind & Bootstrap -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- FileSaver & XLSX for export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
-    body { box-sizing: border-box; }
-    .card-hover { transition: all 0.3s ease; }
-    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-    .loading-spinner { border: 3px solid #f3f4f6; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .photo-placeholder { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem; }
-    .status-badge { position: absolute; top: 10px; right: 10px; background: rgba(34, 197, 94, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-    .slideshow-container { position: relative; width: 100%; height: 280px; overflow: hidden; }
-    .slide { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease-in-out; }
-    .slide.active { opacity: 1; }
-    .slide img { width: 100%; height: 100%; object-fit: cover; }
-    .slideshow-nav { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; }
-    .slideshow-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); cursor: pointer; transition: background 0.3s ease; }
-    .slideshow-dot.active { background: rgba(255, 255, 255, 0.9); }
-    .slideshow-arrows { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; z-index: 10; }
-    .slideshow-container:hover .slideshow-arrows { opacity: 1; }
-    .slideshow-arrows.prev { left: 10px; }
-    .slideshow-arrows.next { right: 10px; }
-    .photo-count { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.7); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    body {
+      background: linear-gradient(135deg, #e0f2fe, #f8fafc);
+      font-family: 'Inter', sans-serif;
+    }
+    .card-hover:hover {
+      transform: scale(1.02);
+      transition: 0.3s;
+    }
   </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
-
-  <!-- HEADER -->
-  <header class="bg-white shadow-lg border-b-4 border-blue-600">
-    <div class="container mx-auto px-4 py-6 flex justify-between items-center">
-      <div class="flex items-center space-x-4">
-        <!-- Ganti icon dengan logo gambar -->
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Logo_Kemdikbud.png/120px-Logo_Kemdikbud.png" 
-             alt="Logo MKKS" class="w-14 h-14 rounded-full border-2 border-blue-600">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">MKKS ROSO NU SINTUVU</h1>
-          <p class="text-gray-600">SMP WILAYAH DONGGALA 1</p>
-          <p class="text-gray-500 text-sm">Sekretariat: Jl. Lamarauna No. 23 A Kel.Tanjung Batu (SMP Negeri 2 Banawa)</p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-          <i class="fas fa-clock text-green-500 mr-1"></i><span id="currentDateTime">Loading...</span>
-        </div>
-        <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-          <i class="fas fa-sync-alt mr-2"></i>Refresh
-        </button>
-      </div>
-    </div>
+<body class="min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-blue-700 text-white shadow-md py-4 px-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">📊 Dashboard MKKS ROSO NU SINTUVU</h1>
+    <div id="currentDateTime" class="text-sm"></div>
   </header>
 
-  <!-- MAIN -->
-  <main class="container mx-auto px-4 py-8">
-    <!-- Statistik -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="statsGrid"></div>
-
-    <!-- Pencarian -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8 flex flex-col md:flex-row gap-4 justify-between">
-      <div class="flex-1 relative">
-        <input type="text" id="searchInput" placeholder="Cari nama sekolah atau kepala sekolah..." 
-               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+  <!-- Statistik -->
+  <section class="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white shadow-md rounded-xl p-4 flex items-center justify-between card-hover">
+      <div>
+        <p class="text-gray-500 text-sm">Total Sekolah</p>
+        <h3 id="totalSekolah" class="text-2xl font-bold text-blue-600">0</h3>
       </div>
-      <div class="flex gap-2">
-        <select id="filterWebsite" class="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
-          <option value="">Semua Website</option>
-          <option value="ada">Ada Website</option>
-          <option value="tidak">Tidak Ada Website</option>
-        </select>
-      </div>
+      <i class="fas fa-school text-blue-500 text-3xl"></i>
     </div>
-
-    <!-- Loading -->
-    <div id="loadingState" class="flex justify-center items-center py-12">
-      <div class="text-center">
-        <div class="loading-spinner mx-auto mb-4"></div>
-        <p class="text-gray-600">Memuat data sekolah...</p>
+    <div class="bg-white shadow-md rounded-xl p-4 flex items-center justify-between card-hover">
+      <div>
+        <p class="text-gray-500 text-sm">Punya Website</p>
+        <h3 id="totalWebsite" class="text-2xl font-bold text-green-600">0</h3>
       </div>
+      <i class="fas fa-globe text-green-500 text-3xl"></i>
     </div>
+    <div class="bg-white shadow-md rounded-xl p-4 flex items-center justify-between card-hover">
+      <div>
+        <p class="text-gray-500 text-sm">Punya Foto</p>
+        <h3 id="totalFoto" class="text-2xl font-bold text-yellow-600">0</h3>
+      </div>
+      <i class="fas fa-image text-yellow-500 text-3xl"></i>
+    </div>
+    <div class="bg-white shadow-md rounded-xl p-4 flex items-center justify-between card-hover">
+      <div>
+        <p class="text-gray-500 text-sm">Data Lengkap</p>
+        <h3 id="totalLengkap" class="text-2xl font-bold text-purple-600">0</h3>
+      </div>
+      <i class="fas fa-check-circle text-purple-500 text-3xl"></i>
+    </div>
+  </section>
 
-    <!-- Grid Data Sekolah -->
-    <div id="schoolGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 hidden"></div>
-  </main>
+  <!-- Filter dan Ekspor -->
+  <section class="px-6 mb-4 flex flex-wrap gap-2 justify-between items-center">
+    <div class="flex items-center gap-2">
+      <input id="searchInput" type="text" placeholder="Cari sekolah..." class="border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-blue-200" />
+      <select id="filterWebsite" class="border border-gray-300 rounded-lg px-3 py-2">
+        <option value="">Semua</option>
+        <option value="Punya Website">Punya Website</option>
+        <option value="Tidak Punya Website">Tidak Punya Website</option>
+      </select>
+      <button onclick="refreshData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"><i class="fas fa-sync-alt mr-1"></i> Refresh</button>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i> Excel</button>
+      <button onclick="exportToPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"><i class="fas fa-file-pdf mr-1"></i> PDF</button>
+      <label for="itemsPerPage" class="text-sm text-gray-600">Tampil:</label>
+      <select id="itemsPerPage" class="border border-gray-300 rounded-lg px-2 py-1 text-sm">
+        <option>6</option>
+        <option>12</option>
+        <option>24</option>
+      </select>
+    </div>
+  </section>
 
-  <footer class="bg-gray-800 text-white py-6 text-center">
-    <p class="text-gray-300">
-      <i class="fas fa-map-marker-alt mr-1"></i>
-      Sekretariat: Jl. Lamarauna No. 23 A, Kel. Tanjung Batu — SMP Negeri 2 Banawa
-    </p>
+  <!-- Kontainer Sekolah -->
+  <section class="px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="schoolContainer"></section>
+
+  <!-- Pagination -->
+  <div class="flex justify-center my-4" id="pagination"></div>
+
+  <!-- Footer -->
+  <footer class="bg-blue-800 text-white text-center py-3 mt-auto">
+    &copy; 2025 MKKS ROSO NU SINTUVU — Semua Hak Dilindungi
   </footer>
 
   <script>
-    const SHEET_ID = "1rgI2BHnTH20CGvGcLwTHIsWM-q9Nc1cPxdxtYWrln98";
-    const SHEET_NAME = "sekolah";
-    const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1rgI2BHnTH20CGvGcLwTHIsWM-q9Nc1cPxdxtYWrln98/gviz/tq?tqx=out:json&sheet=sekolah";
+
+    let schoolData = [];
+    let currentPage = 1;
+    let itemsPerPage = 6;
 
     async function fetchSchoolData() {
+      document.getElementById("schoolContainer").innerHTML = "<p class='text-center text-gray-500 w-full'>Memuat data...</p>";
       try {
-        const res = await fetch(API_URL);
+        const res = await fetch(sheetURL);
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
-        const data = rows.map(r => ({
-          nama: r.c[0]?.v || "",
-          kepsek: r.c[1]?.v || "",
-          nip: r.c[2]?.v || "",
-          web: r.c[3]?.v || "",
+
+        schoolData = rows.map(r => ({
+          nama: r.c[0]?.v || "-",
+          kepala: r.c[1]?.v || "-",
+          nip: r.c[2]?.v || "-",
+          website: r.c[3]?.v || "",
           foto1: r.c[4]?.v || "",
           foto2: r.c[5]?.v || "",
           foto3: r.c[6]?.v || ""
-        })).filter(r => r.nama);
-        renderData(data);
-      } catch {
-        document.getElementById("loadingState").innerHTML = "<p class='text-red-600'>Gagal memuat data!</p>";
+        }));
+
+        updateStats();
+        renderSchools();
+      } catch (err) {
+        document.getElementById("schoolContainer").innerHTML = "<p class='text-center text-red-500'>Gagal memuat data!</p>";
+        console.error(err);
       }
     }
 
-    function renderData(data) {
-      const grid = document.getElementById("schoolGrid");
-      grid.innerHTML = "";
-      data.forEach((s) => {
-        const fotos = [s.foto1, s.foto2, s.foto3].filter(f => f);
-        const card = document.createElement("div");
-        card.className = "bg-white rounded-xl shadow-lg overflow-hidden card-hover";
-        card.innerHTML = `
-          <div class="slideshow-container">
-            ${fotos.map((f, i) => `
-              <div class="slide ${i === 0 ? 'active' : ''}">
-                <img src="${convertDrive(f)}" alt="foto ${s.nama}">
-              </div>`).join("")}
-          </div>
-          <div class="p-4">
-            <h3 class="font-bold text-xl">${s.nama}</h3>
-            <p class="text-sm text-gray-600"><i class="fas fa-user-tie mr-2"></i>${s.kepsek}</p>
-            <p class="text-sm text-gray-600"><i class="fas fa-id-card mr-2"></i>${s.nip}</p>
-            ${s.web ? `<a href="${s.web}" target="_blank" class="text-blue-600 underline mt-2 inline-block"><i class="fas fa-globe mr-1"></i> Website</a>` : ""}
-          </div>`;
-        grid.appendChild(card);
-      });
-      document.getElementById("loadingState").classList.add("hidden");
-      grid.classList.remove("hidden");
+    function updateStats() {
+      const total = schoolData.length;
+      const punyaWebsite = schoolData.filter(s => s.website).length;
+      const punyaFoto = schoolData.filter(s => s.foto1 || s.foto2 || s.foto3).length;
+      const lengkap = schoolData.filter(s => s.website && s.kepala !== "-" && (s.foto1 || s.foto2)).length;
+
+      document.getElementById("totalSekolah").textContent = total;
+      document.getElementById("totalWebsite").textContent = punyaWebsite;
+      document.getElementById("totalFoto").textContent = punyaFoto;
+      document.getElementById("totalLengkap").textContent = lengkap;
     }
 
-    function convertDrive(url) {
-      const idMatch = url.match(/[-\w]{25,}/);
-      return idMatch ? `https://drive.google.com/uc?export=view&id=${idMatch[0]}` : url;
+    function filterSchools() {
+      const keyword = document.getElementById("searchInput").value.toLowerCase();
+      const filterWeb = document.getElementById("filterWebsite").value;
+
+      let filtered = schoolData.filter(s => s.nama.toLowerCase().includes(keyword));
+
+      if (filterWeb === "Punya Website") filtered = filtered.filter(s => s.website);
+      if (filterWeb === "Tidak Punya Website") filtered = filtered.filter(s => !s.website);
+
+      renderSchools(filtered);
+    }
+
+    function renderSchools(data = schoolData) {
+      const container = document.getElementById("schoolContainer");
+      container.innerHTML = "";
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const paginated = data.slice(start, start + itemsPerPage);
+
+      paginated.forEach(s => {
+        const photos = [s.foto1, s.foto2, s.foto3].filter(f => f);
+        const hasPhotos = photos.length > 0;
+        const card = document.createElement("div");
+        card.className = "bg-white shadow-md rounded-xl p-4 card-hover";
+
+        card.innerHTML = `
+          <h4 class="font-semibold text-lg mb-2 text-blue-700">${s.nama}</h4>
+          <p class="text-sm text-gray-600 mb-1"><b>Kepala:</b> ${s.kepala}</p>
+          <p class="text-sm text-gray-600 mb-2"><b>NIP:</b> ${s.nip}</p>
+          ${s.website ? `<a href="${s.website}" target="_blank" class="text-blue-600 hover:underline text-sm"><i class="fas fa-globe"></i> Website</a>` : `<span class="text-gray-400 text-sm"><i class="fas fa-globe"></i> Tidak ada website</span>`}
+          <div class="mt-3">
+            ${hasPhotos ? `
+              <div id="carousel-${s.nama.replace(/\s+/g, '')}" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                  ${photos.map((url, i) => `
+                    <div class="carousel-item ${i === 0 ? 'active' : ''}">
+                      <img src="${url}" class="d-block w-100 rounded-lg" alt="Foto ${s.nama}">
+                    </div>`).join('')}
+                </div>
+              </div>` : `<div class="text-gray-400 text-sm text-center py-4">Tidak ada foto</div>`}
+          </div>
+        `;
+        container.appendChild(card);
+        if (hasPhotos) startAutoSlideshow(`carousel-${s.nama.replace(/\s+/g, '')}`);
+      });
+
+      renderPagination(data.length);
+    }
+
+    function renderPagination(totalItems) {
+      const pagination = document.getElementById("pagination");
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      pagination.innerHTML = "";
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = `mx-1 px-3 py-1 rounded-lg ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white border'}`;
+        btn.onclick = () => { currentPage = i; renderSchools(); };
+        pagination.appendChild(btn);
+      }
+    }
+
+    function startAutoSlideshow(id) {
+      const carousel = document.getElementById(id);
+      const slides = carousel.querySelectorAll('.carousel-item');
+      let index = 0;
+      setInterval(() => {
+        slides[index].classList.remove('active');
+        index = (index + 1) % slides.length;
+        slides[index].classList.add('active');
+      }, 4000);
+    }
+
+    function refreshData() {
+      fetchSchoolData();
+    }
+
+    // Ekspor Excel
+    function exportToExcel() {
+      const ws = XLSX.utils.json_to_sheet(schoolData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Data Sekolah");
+      XLSX.writeFile(wb, "Data_Sekolah_MKKS.xlsx");
+    }
+
+    // Ekspor PDF
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text("Laporan Data Sekolah MKKS ROSO NU SINTUVU", 10, 10);
+      let y = 20;
+      schoolData.forEach((s, i) => {
+        doc.text(`${i + 1}. ${s.nama} - ${s.kepala}`, 10, y);
+        y += 8;
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+      doc.save("Data_Sekolah_MKKS.pdf");
     }
 
     function updateDateTime() {
-      const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Makassar" });
-      document.getElementById("currentDateTime").textContent = now + " WITA";
+      const now = new Date();
+      document.getElementById("currentDateTime").textContent = now.toLocaleString('id-ID', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
     }
 
-    setInterval(updateDateTime, 1000);
-    updateDateTime();
-    fetchSchoolData();
+    document.getElementById("searchInput").addEventListener("input", filterSchools);
+    document.getElementById("filterWebsite").addEventListener("change", filterSchools);
+    document.getElementById("itemsPerPage").addEventListener("change", e => {
+      itemsPerPage = parseInt(e.target.value);
+      currentPage = 1;
+      renderSchools();
+    });
+
+    window.onload = () => {
+      fetchSchoolData();
+      setInterval(updateDateTime, 1000);
+    };
   </script>
 </body>
 </html>
