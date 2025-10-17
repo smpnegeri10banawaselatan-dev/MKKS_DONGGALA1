@@ -133,28 +133,35 @@
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
     <!-- HEADER -->
-  <header class="bg-white shadow-lg border-b-4 border-blue-600">
-    <div class="container mx-auto px-4 py-6 flex justify-between items-center">
-      <div class="flex items-center space-x-4">
-        <!-- Ganti icon dengan logo gambar -->
-        <img src="logo_mkks.png" 
-             alt="Logo MKKS" class="w-14 h-14 rounded-full border-2 border-blue-600">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">MKKS ROSO NU SINTUVU</h1>
-          <p class="text-gray-600">SMP WILAYAH DONGGALA 1</p>
-          <p class="text-gray-500 text-sm">Sekretariat: Jl. Lamarauna No. 23 A Kel.Tanjung Batu (SMP Negeri 2 Banawa)</p>
-        </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-          <i class="fas fa-clock text-green-500 mr-1"></i><span id="currentDateTime">Loading...</span>
-        </div>
-        <button onclick="refreshData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-          <i class="fas fa-sync-alt mr-2"></i>Refresh
-        </button>
+<header class="bg-white shadow-lg border-b-4 border-blue-600">
+  <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+    <div class="flex items-center space-x-4">
+      <!-- Logo tanpa bentuk bundar dan tanpa border -->
+      <img src="logo_mkks.png" 
+           alt="Logo MKKS" 
+           class="h-16 w-auto object-contain bg-white p-1">
+
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">MKKS ROSO NU SINTUVU</h1>
+        <p class="text-gray-600">SMP WILAYAH DONGGALA 1</p>
+        <p class="text-gray-500 text-sm">
+          Sekretariat: Jl. Lamarauna No. 23 A Kel.Tanjung Batu (SMP Negeri 2 Banawa)
+        </p>
       </div>
     </div>
-  </header>
+
+    <div class="flex items-center space-x-4">
+      <div class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+        <i class="fas fa-clock text-green-500 mr-1"></i>
+        <span id="currentDateTime">Loading...</span>
+      </div>
+      <button onclick="refreshData()" 
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+        <i class="fas fa-sync-alt mr-2"></i>Refresh
+      </button>
+    </div>
+  </div>
+</header>
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
         <!-- Stats Cards -->
