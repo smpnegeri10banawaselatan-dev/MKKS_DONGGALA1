@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Management Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing: border-box; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .demo-badge { background: linear-gradient(45deg,#ff6b6b,#ee5a24); color:white; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; }
+  </style>
+</head>
+<body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+<!-- CONFIG -->
+<script>
+  // GANTI ke Web App URL hasil deploy Apps Script-mu, contoh:
+  // const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx.../exec';
+  const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwni3ANjEYwZDuoS6cCLDDL3sxR-O939IGcM7HK1KARCUTZEHTX2tHsSE9oezxVC4eCMQ/exec';
+</script>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+      <div class="flex justify-center mb-4"><span class="demo-badge">BPKAD DONGGALA</span></div>
+      <h2 id="loginTitle" class="mt-6 text-3xl font-extrabold text-gray-900">BIDANG ASET DAERAH</h2>
+      <p class="mt-2 text-sm text-gray-600">Masukan User dan Password untuk mengakses dashboard</p>
+    </div>
+    <form id="loginForm" class="mt-8 space-y-6">
+      <div class="rounded-md shadow-sm space-y-4">
+        <div><label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <input id="username" name="username" type="text" required class="relative block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 sm:text-sm" placeholder="Masukkan username"></div>
+        <div><label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input id="password" name="password" type="password" required class="relative block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-500 text-gray-900 sm:text-sm" placeholder="Masukkan password"></div>
+      </div>
+      <div><button type="submit" id="loginButton" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"> <span id="loginButtonText">Masuk ke Dashboard</span> <div id="loginSpinner" class="hidden ml-2"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg></div></button></div>
+      <div class="text-center"><p class="text-xs text-gray-500">2025 BIDANG ASET DAERAH </p></div>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard Screen -->
+<div id="dashboardScreen" class="hidden min-h-full">
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center space-x-4"><h1 id="dashboardTitle" class="text-2xl font-bold text-gray-900">Document Management Dashboard</h1><span class="demo-badge">Demo Mode</span></div>
+        <div class="flex items-center space-x-4"><span class="text-sm text-gray-600">Selamat datang, <span id="currentUser" class="font-medium">User</span></span> <button id="logoutButton" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"> Logout </button></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Upload Section -->
+    <div class="px-4 py-6 sm:px-0">
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Upload Dokumen Baru</h3>
+          <div class="mt-2 max-w-xl text-sm text-gray-500"><p>Upload dokumen Anda ke Google Drive</p></div>
+          <form id="uploadForm" class="mt-5">
+            <div class="flex items-center space-x-4">
+              <div class="flex-1">
+                <label for="fileInput" class="block text-sm font-medium text-gray-700 mb-1">Pilih File</label>
+                <input type="file" id="fileInput" name="file" accept=".pdf,.doc,.docx,.txt,.jpg,.png" class="block w-full text-sm text-gray-500">
+              </div>
+              <div class="flex-1">
+                <label for="descriptionInput" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <input type="text" id="descriptionInput" placeholder="Deskripsi dokumen..." class="block w-full px-3 py-2 border border-gray-300 rounded-md sm:text-sm">
+              </div>
+              <div class="flex-1">
+                <label for="bidangInput" class="block text-sm font-medium text-gray-700 mb-1">Bidang</label>
+                <input type="text" id="bidangInput" placeholder="Bidang..." class="block w-full px-3 py-2 border border-gray-300 rounded-md sm:text-sm">
+              </div>
+              <div class="flex-1">
+                <label for="subInput" class="block text-sm font-medium text-gray-700 mb-1">Sub</label>
+                <input type="text" id="subInput" placeholder="Sub..." class="block w-full px-3 py-2 border border-gray-300 rounded-md sm:text-sm">
+              </div>
+              <div class="flex-1">
+                <label for="jenisInput" class="block text-sm font-medium text-gray-700 mb-1">Jenis</label>
+                <input type="text" id="jenisInput" placeholder="Jenis dokumen..." class="block w-full px-3 py-2 border border-gray-300 rounded-md sm:text-sm">
+              </div>
+
+              <div class="flex-shrink-0 pt-6">
+                <button type="submit" id="uploadButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">
+                  <span id="uploadButtonText">Upload Document</span>
+                  <div id="uploadSpinner" class="hidden ml-2">
+                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="px-4 py-6 sm:px-0">
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">Dokumen Tersimpan</h3>
+          <p class="mt-1 max-w-2xl text-sm text-gray-500">Daftar dokumen yang telah diupload ke Google Drive</p>
+        </div>
+        <div id="documentsContainer">
+          <div id="emptyState" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewbox="0 0 48 48"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada dokumen</h3>
+            <p class="mt-1 text-sm text-gray-500">Mulai dengan mengupload dokumen pertama Anda.</p>
+          </div>
+          <ul id="documentsList" class="divide-y divide-gray-200"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="successToast" class="hidden fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg z-50 fade-in">
+  <div class="flex items-center"><svg class="w-5 h-5 mr-2" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span id="toastMessage">Dokumen berhasil diupload!</span></div>
+</div>
+
+<script>
+  // Small helper: POST JSON to GAS Web App
+  async function postToGAS(data) {
+    if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL.includes('REPLACE_WITH')) {
+      return { ok: false, error: 'GAS_WEBAPP_URL belum dikonfigurasi di index.html' };
+    }
+    try {
+      const res = await fetch(GAS_WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
+  // UI state
+  let currentDocuments = [];
+  let isLoggedIn = false;
+
+  // Login
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginButton');
+    const spinner = document.getElementById('loginSpinner');
+    const txt = document.getElementById('loginButtonText');
+    btn.disabled = true; txt.textContent = 'Memproses...'; spinner.classList.remove('hidden');
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const result = await postToGAS({ action: 'login', username, password });
+
+    if (result.ok) {
+      isLoggedIn = true;
+      document.getElementById('currentUser').textContent = result.user.name || result.user.username;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('dashboardScreen').classList.remove('hidden');
+      await refreshDocuments();
+    } else {
+      showToast(result.error || 'Gagal login', 'error');
+    }
+
+    btn.disabled = false; txt.textContent = 'Masuk ke Dashboard'; spinner.classList.add('hidden');
+    document.getElementById('loginForm').reset();
+  });
+
+  document.getElementById('logoutButton').addEventListener('click', function() {
+    isLoggedIn = false;
+    document.getElementById('dashboardScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+  });
+
+  // Upload
+  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('fileInput');
+    const descriptionInput = document.getElementById('descriptionInput');
+    const bidangInput = document.getElementById('bidangInput');
+    const subInput = document.getElementById('subInput');
+    const jenisInput = document.getElementById('jenisInput');
+
+    if (!fileInput.files[0]) { showToast('Pilih file terlebih dahulu!', 'error'); return; }
+
+    const uploadButton = document.getElementById('uploadButton');
+    const uploadSpinner = document.getElementById('uploadSpinner');
+    const uploadButtonText = document.getElementById('uploadButtonText');
+
+    uploadButton.disabled = true; uploadButtonText.textContent = 'Mengupload...'; uploadSpinner.classList.remove('hidden');
+
+    const file = fileInput.files[0];
+    const base64 = await readFileAsBase64(file);
+
+    const payload = {
+      action: 'upload',
+      filename: file.name,
+      filesize: file.size,
+      mimeType: file.type,
+      description: descriptionInput.value || '',
+      bidang: bidangInput.value || '',
+      sub: subInput.value || '',
+      jenis: jenisInput.value || '',
+      fileBase64: base64
+    };
+
+    const result = await postToGAS(payload);
+    if (result.ok) {
+      showToast('Dokumen berhasil diupload ke Google Drive!');
+      fileInput.value = '';
+      descriptionInput.value = '';
+      bidangInput.value = ''; subInput.value = ''; jenisInput.value = '';
+      await refreshDocuments();
+    } else {
+      showToast(result.error || 'Gagal mengupload dokumen', 'error');
+    }
+
+    uploadButton.disabled = false; uploadButtonText.textContent = 'Upload Document'; uploadSpinner.classList.add('hidden');
+  });
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file); // returns data:*/*;base64,.... which backend strips
+    });
+  }
+
+  // Refresh documents from GAS
+  async function refreshDocuments() {
+    const res = await postToGAS({ action: 'listDocuments' });
+    if (res.ok) {
+      currentDocuments = res.documents || [];
+      renderDocumentsList();
+    } else {
+      showToast(res.error || 'Gagal mengambil daftar dokumen', 'error');
+    }
+  }
+
+  function renderDocumentsList() {
+    const list = document.getElementById('documentsList');
+    const emptyState = document.getElementById('emptyState');
+    if (!currentDocuments || currentDocuments.length === 0) {
+      emptyState.classList.remove('hidden');
+      list.innerHTML = '';
+      return;
+    }
+    emptyState.classList.add('hidden');
+
+    list.innerHTML = currentDocuments.map(doc => `
+      <li class="px-4 py-4 hover:bg-gray-50 transition-colors">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+              ${getFileIconByName(doc.filename)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(doc.filename)}</p>
+              <p class="text-sm text-gray-500">${escapeHtml(doc.bidang || '')} ${doc.sub ? '— ' + escapeHtml(doc.sub) : ''}</p>
+              <p class="text-xs text-gray-400">${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString('id-ID') : ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a href="${doc.link}" target="_blank" class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">Lihat</a>
+            <button onclick="confirmDelete('${encodeURIComponent(doc.link)}','${escapeJs(doc.filename)}')" class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200">Hapus</button>
+          </div>
+        </div>
+      </li>
+    `).join('');
+  }
+
+  // Delete flow
+  window.confirmDelete = async function(linkEncoded, filename) {
+    const link = decodeURIComponent(linkEncoded);
+    if (!confirm('Hapus dokumen "' + filename + '"?')) return;
+    const res = await postToGAS({ action: 'delete', link });
+    if (res.ok) { showToast(res.message || 'Dokumen dihapus'); refreshDocuments(); }
+    else showToast(res.error || 'Gagal menghapus', 'error');
+  };
+
+  // Small helpers
+  function showToast(message, type='success') {
+    const toast = document.getElementById('successToast');
+    const toastMessage = document.getElementById('toastMessage');
+    toastMessage.textContent = message;
+    if (type === 'error') {
+      toast.classList.remove('bg-green-500'); toast.classList.add('bg-red-500');
+    } else {
+      toast.classList.remove('bg-red-500'); toast.classList.add('bg-green-500');
+    }
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeJs(s) { return String(s || '').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
+
+  function getFileIconByName(name) {
+    const n = (name || '').toLowerCase();
+    if (n.endsWith('.pdf')) return '<div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg></div>';
+    if (n.match(/\.(jpg|jpeg|png|gif|bmp)$/)) return '<div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z"/></svg></div>';
+    return '<div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg></div>';
+  }
+
+  // Initialize: if you want, attempt to load documents (but we wait until login)
+  // window.onload = refreshDocuments;
+</script>
+</body>
+</html>
